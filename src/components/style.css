@@ -1,0 +1,6 @@
+.background {
+    width: min-content;
+    background: green;
+    padding: 1rem;
+    border-radius: 1rem;
+}
