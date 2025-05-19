@@ -1,0 +1,39 @@
+.index-selector-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow: hidden; /* Kapsayıcı dışına taşan animasyonları gizlemek için */
+}
+
+.profession-item {
+    background-color: #f9a825;
+    color: white;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 120px;
+    transition: width 0.3s ease-in-out, opacity 0.5s ease-out, transform 0.5s ease-out; /* Opacity ve transform geçişlerini ekledik */
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    opacity: 0; /* Başlangıçta görünmez */
+    transform: translateY(-30px); /* Başlangıçta yukarıda */
+}
+
+.profession-item.visible { /* Kartlar göründüğünde uygulanacak sınıf */
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.profession-item.hovered {
+    width: 200px; /* Genişlik animasyonu için özel boyut */
+}
