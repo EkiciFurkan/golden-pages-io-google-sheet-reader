@@ -3,24 +3,10 @@
 
 import { useState } from 'react'; // useEffect eklendi (opsiyonel)
 import IndexSelector from "@/components/IndexSelector/IndexSelector";
-import SheetWithInteractiveTable from "@/components/SheetWithSearch";
-
-interface PageClientContentProps {
-	initialTableData: string[][];
-}
-
-export default function PageClientContent({ initialTableData }: PageClientContentProps) {
-	const [extractedSectors, setExtractedSectors] = useState<string[]>([]);
+export default function PageClientContent() {
+	const [extractedSectors] = useState<string[]>([]);
 	const [selectedSectorFromIndex, setSelectedSectorFromIndex] = useState<string | null>(null);
 
-	const handleSectorsExtracted = (sectors: string[]) => {
-		setExtractedSectors(sectors);
-		// Eğer tablo ilk yüklendiğinde gelen sektörler arasında o an seçili olan sektör yoksa,
-		// seçimi temizleyebiliriz (opsiyonel, veri değiştiğinde tutarlılık için).
-		// if (selectedSectorFromIndex && !sectors.includes(selectedSectorFromIndex)) {
-		//     setSelectedSectorFromIndex(null);
-		// }
-	};
 
 	const handleProfessionSelection = (profession: string | null) => {
 		setSelectedSectorFromIndex(profession);
@@ -41,15 +27,7 @@ export default function PageClientContent({ initialTableData }: PageClientConten
 				flexGrow: 1,
 				width: `calc(100% - ${indexSelectorWidth})`
 			}}>
-				{initialTableData.length > 0 ? (
-					<SheetWithInteractiveTable
-						initialData={initialTableData}
-						onSectorsExtracted={handleSectorsExtracted}
-						filterBySectorFromIndex={selectedSectorFromIndex} // Yeni prop
-					/>
-				) : (
-					<p>Veri yüklenemedi veya Google Sheet'ten veri bulunamadı.</p>
-				)}
+				
 			</main>
 		</div>
 	);

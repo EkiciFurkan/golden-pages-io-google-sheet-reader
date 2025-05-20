@@ -1,5 +1,5 @@
 import { getSheetData } from '@/lib/googleSheets';
-import SheetWithInteractiveTable from '@/components/SheetWithSearch';
+
 import Image from "next/image";
 
 export default async function AramaliTabloSayfasi() {
@@ -17,7 +17,7 @@ export default async function AramaliTabloSayfasi() {
 	return (
 		<div>
 			<h1>Google E-Tablo Verileri (Arama Özellikli)</h1>
-			<SheetWithInteractiveTable initialData={sheetData} />
+			
 			<Image src={"/img.png"} width={"1920"} height={"1440"} alt={""}/>
 		</div>
 	);

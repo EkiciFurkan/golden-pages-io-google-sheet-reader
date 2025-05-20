@@ -1,19 +1,31 @@
+/*
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import "./style.css";
+import {useState, useEffect, useMemo} from 'react';
+import CompanyCard from '@/components/CompanyCard/CompanyCard'; // Adjusted path
+import styles from './SheetWithSearch.module.css'; // Import the CSS module
 
 interface SheetWithInteractiveTableProps {
 	initialData: string[][];
-	onSectorsExtracted: (sectors: string[]) => void;
-	filterBySectorFromIndex: string | null; // IndexSelector'dan gelen filtre
+	onSectorsExtracted?: (sectors: string[]) => void;
+	filterBySectorFromIndex: string | null;
 }
 
 interface SearchTerms {
 	companyName: string;
 	country: string;
-	profession: string; // Bu, input alanındaki "Business Sector" araması
+	profession: string;
 	city: string;
+}
+
+// Define a type for the structured company data to be passed to the card
+interface CompanyDisplayData {
+	id: string;
+	name?: string;
+	country?: string;
+	sector?: string;
+	city?: string;
+	details: Record<string, string>;
 }
 
 export default function SheetWithInteractiveTable({
@@ -24,7 +36,7 @@ export default function SheetWithInteractiveTable({
 	const [searchTerms, setSearchTerms] = useState<SearchTerms>({
 		companyName: '',
 		country: '',
-		profession: '', // Input için ayrı
+		profession: '',
 		city: '',
 	});
 
@@ -36,14 +48,11 @@ export default function SheetWithInteractiveTable({
 		return initialData && initialData.length > 1 ? initialData.slice(1) : [];
 	}, [initialData]);
 
-	const [displayHeader, setDisplayHeader] = useState<string[]>(originalHeaderRow);
-	const [displayRows, setDisplayRows] = useState<string[][]>(originalDataRows);
-
 	const filterConfig = useMemo(() => ({
-		companyName: { header: "Name of the company", placeholder: "Şirket adına göre ara..." },
-		country: { header: "Country", placeholder: "Ülkeye göre ara..." },
-		profession: { header: "Business Sector", placeholder: "Sektör içinde ayrıca ara..." }, // Placeholder güncellendi
-		city: { header: "City", placeholder: "Şehir/İlçeye göre ara..." }
+		companyName: {header: "Name of the company", placeholder: "Search by company name..."},
+		country: {header: "Country", placeholder: "Search by country..."},
+		profession: {header: "Business Sector", placeholder: "Search within sector..."},
+		city: {header: "City", placeholder: "Search by city/district..."}
 	}), []);
 
 	const columnIndices = useMemo(() => {
@@ -57,12 +66,18 @@ export default function SheetWithInteractiveTable({
 				indices[configKey] = foundIndex !== -1 ? foundIndex : -1;
 			}
 		}
-		return indices as Record<keyof SearchTerms, number>;
+		// Ensure all keys are present, even if -1
+		const fullIndices: Record<keyof SearchTerms, number> = {
+			companyName: indices.companyName ?? -1,
+			country: indices.country ?? -1,
+			profession: indices.profession ?? -1,
+			city: indices.city ?? -1,
+		};
+		return fullIndices;
 	}, [originalHeaderRow, filterConfig]);
 
 	const uniqueSectors = useMemo(() => {
-		// Bu kısım aynı kalıyor
-		if (!originalDataRows.length || columnIndices.profession === undefined || columnIndices.profession === -1) {
+		if (!originalDataRows.length || columnIndices.profession === -1) {
 			return [];
 		}
 		const sectorIndex = columnIndices.profession;
@@ -79,86 +94,78 @@ export default function SheetWithInteractiveTable({
 		onSectorsExtracted(uniqueSectors);
 	}, [uniqueSectors, onSectorsExtracted]);
 
-
 	const allSearchTermsEmpty = useMemo(() => {
 		return Object.values(searchTerms).every(term => !term.trim());
 	}, [searchTerms]);
 
-	useEffect(() => {
-		if (!initialData || initialData.length === 0) {
-			setDisplayHeader([]);
-			setDisplayRows([]);
-			return;
+	const processedAndFilteredData = useMemo((): CompanyDisplayData[] => {
+		if (!initialData || initialData.length === 0 || originalHeaderRow.length === 0) {
+			return [];
 		}
 
-		// Eğer IndexSelector'dan bir filtre yoksa VE tüm arama terimleri boşsa, tüm veriyi göster
-		if (!filterBySectorFromIndex && allSearchTermsEmpty) {
-			setDisplayHeader(originalHeaderRow);
-			setDisplayRows(originalDataRows);
-			return;
-		}
+		let dataToFilter = originalDataRows;
 
-		const lowercasedSearchTerms = Object.entries(searchTerms).reduce((acc, [key, value]) => {
-			acc[key as keyof SearchTerms] = value.toLowerCase().trim();
-			return acc;
-		}, {} as Record<keyof SearchTerms, string>);
-
-		const sectorColumnIndex = columnIndices.profession;
-
-		const filteredRows = originalDataRows.filter(row => {
-			// 1. IndexSelector filtresini uygula (eğer varsa)
-			if (filterBySectorFromIndex && sectorColumnIndex !== -1) {
-				const cellValueForSector = row[sectorColumnIndex];
-				if (!cellValueForSector || cellValueForSector.toString().toLowerCase() !== filterBySectorFromIndex.toLowerCase()) {
-					return false; // IndexSelector filtresiyle eşleşmiyorsa bu satırı alma
-				}
-			}
-
-			// 2. Diğer input alanı filtrelerini uygula
-			return (Object.keys(filterConfig) as Array<keyof SearchTerms>).every(filterKey => {
-				const searchTerm = lowercasedSearchTerms[filterKey];
-				if (!searchTerm) { // Bu input alanı için arama terimi yoksa true dön
-					return true;
-				}
-
-				const columnIndex = columnIndices[filterKey];
-				if (columnIndex === undefined || columnIndex === -1) {
-					// Bu normalde olmamalı ama bir güvenlik önlemi
-					return false;
-				}
-
-				const cellValue = row[columnIndex];
-				return cellValue !== undefined && cellValue !== null &&
-					cellValue.toString().toLowerCase().includes(searchTerm);
+		// 1. IndexSelector filter (applied first if present)
+		if (filterBySectorFromIndex && columnIndices.profession !== -1) {
+			dataToFilter = dataToFilter.filter(row => {
+				const cellValueForSector = row[columnIndices.profession];
+				return cellValueForSector && cellValueForSector.toLowerCase() === filterBySectorFromIndex.toLowerCase();
 			});
+		}
+
+		// 2. Input field filters (applied to the result of IndexSelector filter or all data)
+		if (!allSearchTermsEmpty) {
+			const lowercasedSearchTerms = Object.entries(searchTerms).reduce((acc, [key, value]) => {
+				acc[key as keyof SearchTerms] = value.toLowerCase().trim();
+				return acc;
+			}, {} as Record<keyof SearchTerms, string>);
+
+			dataToFilter = dataToFilter.filter(row => {
+				return (Object.keys(filterConfig) as Array<keyof SearchTerms>).every(filterKey => {
+					const searchTerm = lowercasedSearchTerms[filterKey];
+					if (!searchTerm) return true;
+
+					const columnIndex = columnIndices[filterKey];
+					if (columnIndex === -1) return false; // Column for this filter key doesn't exist
+
+					const cellValue = row[columnIndex];
+					return cellValue?.toLowerCase().includes(searchTerm);
+				});
+			});
+		}
+
+
+		// Map to CompanyDisplayData
+		return dataToFilter.map((row, rowIndex) => {
+			const details: Record<string, string> = {};
+			originalHeaderRow.forEach((header, index) => {
+				if (header && row[index]) {
+					details[header] = row[index];
+				}
+			});
+			return {
+				id: `company-${rowIndex}-${row[columnIndices.companyName] || ''}`, // Create a somewhat unique ID
+				name: row[columnIndices.companyName],
+				country: row[columnIndices.country],
+				sector: row[columnIndices.profession],
+				city: row[columnIndices.city],
+				details: details,
+			};
 		});
-
-		setDisplayRows(filteredRows);
-		setDisplayHeader(originalHeaderRow); // Başlıkları her zaman göster
-
 	}, [
-		searchTerms,
+		initialData,
 		originalHeaderRow,
 		originalDataRows,
-		initialData,
 		columnIndices,
 		filterConfig,
+		searchTerms,
 		allSearchTermsEmpty,
-		filterBySectorFromIndex // Yeni bağımlılık
+		filterBySectorFromIndex
 	]);
-
-	useEffect(() => {
-		setDisplayHeader(originalHeaderRow);
-		// Eğer IndexSelector filtresi yoksa ve arama terimleri boşsa, tüm veriyi göster
-		if (!filterBySectorFromIndex && allSearchTermsEmpty) {
-			setDisplayRows(originalDataRows);
-		}
-		// Diğer durumlar yukarıdaki ana filtreleme useEffect'i tarafından yönetilecek
-	}, [originalHeaderRow, originalDataRows, filterBySectorFromIndex, allSearchTermsEmpty]);
 
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = event.target;
+		const {name, value} = event.target;
 		setSearchTerms(prevTerms => ({
 			...prevTerms,
 			[name as keyof SearchTerms]: value,
@@ -170,64 +177,42 @@ export default function SheetWithInteractiveTable({
 			key={key}
 			type="text"
 			name={key}
-			// Eğer IndexSelector'dan bir sektör seçiliyse ve bu input "profession" (Business Sector) ise,
-			// belki placeholder'ı değiştirebilir veya input'u devre dışı bırakabilirsiniz.
-			// Şimdilik placeholder'ı güncelledik.
 			placeholder={key === 'profession' && filterBySectorFromIndex
 				? `${filterBySectorFromIndex} içinde ara...`
 				: filterConfig[key].placeholder}
 			value={searchTerms[key]}
 			onChange={handleSearchChange}
-			style={{ marginBottom: '10px', marginRight: '10px', padding: '10px', width: '220px', border: '1px solid #ccc' }}
+			className={styles.searchInput}
 		/>
 	));
 
-	// ... (return kısmı aynı kalabilir)
 	return (
 		<div>
-			<div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap' }}>
+			<div className={styles.searchInputsContainer}>
 				{searchInputs}
 			</div>
 
-			{(!initialData || initialData.length < 2) && displayRows.length === 0 && (
-				<p>Gösterilecek veri bulunamadı.</p>
+			{initialData && initialData.length > 1 && originalHeaderRow.length === 0 && (
+				<p className={styles.noResultsMessage}>Table headers are missing. Cannot process data.</p>
 			)}
 
-			{displayHeader.length > 0 ? (
-				<table>
-					<thead>
-					<tr>
-						{displayHeader.map((headerCell: string, index: number) => (
-							<th key={index} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
-								{headerCell}
-							</th>
+			{originalHeaderRow.length > 0 && (
+				processedAndFilteredData.length > 0 ? (
+					<div className={styles.cardsContainer}>
+						{processedAndFilteredData.map((company) => (
+							<CompanyCard key={company.id} company={company}/>
 						))}
-					</tr>
-					</thead>
-					<tbody>
-					{displayRows.length > 0 ? (
-						displayRows.map((row: string[], rowIndex: number) => (
-							<tr key={rowIndex}>
-								{row.map((cell: string, cellIndex: number) => (
-									<td key={cellIndex} style={{ border: '1px solid #ddd', padding: '8px' }}>
-										{cell !== undefined && cell !== null ? cell : ''}
-									</td>
-								))}
-							</tr>
-						))
-					) : (
-						<tr>
-							<td colSpan={displayHeader.length || 1} style={{ textAlign: 'center', padding: '10px' }}>
-								{!(allSearchTermsEmpty && !filterBySectorFromIndex) ? "Aramanızla eşleşen veri bulunamadı." : (initialData && initialData.length > 1 ? "Veri satırı bulunamadı." : "Veri yükleniyor...")}
-							</td>
-						</tr>
-					)}
-					</tbody>
-				</table>
-			) : (
-				initialData && initialData.length > 0 && originalHeaderRow.length === 0 && !(allSearchTermsEmpty && !filterBySectorFromIndex) &&
-				<p>Tablo başlıkları bulunamadı, arama yapılamıyor.</p>
+					</div>
+				) : (
+					<p className={styles.noResultsMessage}>
+						{!(allSearchTermsEmpty && !filterBySectorFromIndex) ? "Bize Kaydol" : (initialData && initialData.length > 1 ? "No company data available." : "Loading data...")}
+					</p>
+				)
+			)}
+
+			{initialData.length <= 1 && ( // Handles case where initialData has only headers or is empty
+				<p className={styles.loadingMessage}>No data rows found in the sheet.</p>
 			)}
 		</div>
 	);
-}
+}*/

@@ -1,0 +1,159 @@
+/* src/components/CompanyCard/CompanyCard.module.css */
+.card {
+    background-color: var(--card-background, #fff);
+    border: 1px solid var(--card-border-color, #e0e0e0);
+    border-radius: 12px; /* Biraz daha yuvarlak köşeler */
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Daha yumuşak gölge */
+    transition: box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out;
+    width: 100%;
+    display: flex;
+    flex-direction: column; /* Ana eksen dikey */
+    gap: 15px;
+}
+
+.card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+}
+
+.logoContainer {
+    display: flex;
+    justify-content: center; /* Logoyu ortala */
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%; /* Konteynerin tam genişlikte olmasını sağla */
+}
+
+.logo {
+    border-radius: 8px; /* Logoya da hafif yuvarlaklık */
+    object-fit: contain; /* Resmin oranlarını koruyarak sığdır */
+    background-color: var(--logo-bg-color, #f8f9fa); /* Resim şeffafsa arka plan */
+    padding: 5px; /* Logonun etrafında küçük bir boşluk */
+    border: 1px solid var(--logo-border-color, #eee);
+}
+
+.companyInfo {
+    text-align: center; /* Şirket adı ve sektörü ortala */
+}
+
+.companyName {
+    font-size: 1.5em; /* Biraz daha büyük */
+    font-weight: 600;
+    color: var(--card-title-color, #2c3e50); /* Daha koyu bir renk */
+    margin-bottom: 5px; /* Sektörle arasını aç */
+}
+
+.sector,
+.location p {
+    font-size: 0.9em; /* Biraz daha küçük */
+    color: var(--card-text-color, #555);
+    margin-bottom: 4px;
+}
+
+.sector strong, .location p strong {
+    font-weight: 500;
+}
+
+
+.location {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center; /* Şehir ve ülkeyi ortala */
+    margin-top: 5px;
+}
+
+.details {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--card-separator-color, #f0f0f0);
+    font-size: 0.85em;
+    color: var(--card-detail-color, #666);
+}
+
+.details h4 {
+    margin-bottom: 10px;
+    font-weight: 600; /* Biraz daha kalın */
+    color: var(--card-subtitle-color, #333);
+    font-size: 1.1em;
+}
+
+.details ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.details li {
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--card-separator-color-dotted, #e8e8e8);
+    display: flex;
+    justify-content: space-between;
+}
+
+.details li:last-child {
+    border-bottom: none;
+}
+
+.details li strong {
+    color: var(--card-detail-key-color, #444);
+    margin-right: 8px;
+}
+
+.detailLink {
+    color: var(--link-color, #007bff);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.detailLink:hover {
+    text-decoration: underline;
+    color: var(--link-hover-color, #0056b3);
+}
+
+.descriptionSection {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--card-separator-color, #f0f0f0);
+}
+
+.descriptionSection h4 {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--card-subtitle-color, #333);
+    font-size: 1.1em;
+}
+
+.descriptionText {
+    font-size: 0.9em;
+    color: var(--card-text-color, #555);
+    line-height: 1.6;
+    max-height: 120px; /* Biraz daha fazla yer */
+    overflow-y: auto;
+    padding-right: 5px;
+    text-align: left; /* Açıklama metni sola hizalı olsun */
+}
+
+/* Dark mode considerations */
+@media (prefers-color-scheme: dark) {
+    .card {
+        --card-background: #2a2a2a; /* Biraz daha açık koyu */
+        --card-border-color: #404040;
+        --card-title-color: #e8e8e8;
+        --card-text-color: #bdbdbd;
+        --card-detail-color: #afafaf;
+        --card-subtitle-color: #d0d0d0;
+        --card-separator-color: #383838;
+        --card-separator-color-dotted: #3a3a3a;
+        --card-detail-key-color: #c8c8c8;
+    }
+    .logo {
+        --logo-bg-color: #333;
+        --logo-border-color: #444;
+    }
+    .detailLink {
+        --link-color: #60a5fa; /* Daha parlak mavi */
+        --link-hover-color: #93c5fd;
+    }
+}

@@ -1,0 +1,44 @@
+/* src/components/SheetWithSearch/SheetWithSearch.module.css */
+.searchInputsContainer {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.searchInput {
+    margin-bottom: 10px; /* Retained for potential individual styling if not using gap */
+    padding: 10px;
+    min-width: 200px; /* Allow inputs to grow but have a minimum size */
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.cardsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 20px; /* Gap between cards */
+    padding-top: 20px;
+}
+
+.noResultsMessage,
+.loadingMessage {
+    grid-column: 1 / -1; /* Span all columns */
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+    color: #777;
+}
+
+@media (prefers-color-scheme: dark) {
+    .searchInput {
+        background-color: #333;
+        color: #f0f0f0;
+        border-color: #555;
+    }
+    .noResultsMessage,
+    .loadingMessage {
+        color: #aaa;
+    }
+}
